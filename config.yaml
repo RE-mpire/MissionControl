@@ -1,0 +1,15 @@
+host: "localhost"
+port: 8080
+
+devices:
+  - name: "pwm_device1"
+    type: "pwm"
+    port: 0
+
+  - name: "pwm_device2"
+    type: "pwm"
+    port: 1
+
+  - name: "gpio_device1"
+    type: "gpio"
+    port: 2
