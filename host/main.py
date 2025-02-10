@@ -15,10 +15,8 @@ def main():
 
     s = Server(config["host"], config["port"])
     s.start_server()
-    s.listen()
     try:
-        while s.is_running:
-            s.accept_connection()
+        s.listen()
     except KeyboardInterrupt:
         pass
     finally:
