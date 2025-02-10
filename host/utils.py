@@ -32,8 +32,9 @@ def load_config(path: str) -> dict:
         sys.exit(1)
     return config
 
-def log(message: str):
-    print(message)
+def log(message: str, silent: bool = False):
+    if not silent:
+        print(message)
     try:
         with open("log.txt", "a") as f:
             f.write(f"{datetime.now()} -- {message}\n")

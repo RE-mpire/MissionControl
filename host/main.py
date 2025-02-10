@@ -19,11 +19,10 @@ def main():
     try:
         while s.is_running:
             s.accept_connection()
-
-        s.stop_server()
     except KeyboardInterrupt:
+        pass
+    finally:
         s.stop_server()
-        sys.exit(0)
 
 if __name__ == "__main__":
     sys.exit(main())
