@@ -20,9 +20,8 @@ def main():
         server.listen()
     except KeyboardInterrupt:
         pass
-    finally:
-        server.stop_server()
-        logger.close()
+    server.stop_server()
+    logger.close()
 
 
 if __name__ == "__main__":
