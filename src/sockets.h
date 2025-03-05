@@ -39,7 +39,7 @@ inline int setupSocket(int domain, struct sockaddr *addr, socklen_t addrlen) {
     {
         perror("ioctl() failed");
         close(sockfd);
-        return -1
+        return -1;
     }
 
     if (bind(sockfd, addr, addrlen) < 0) {

@@ -10,7 +10,7 @@ struct Config
 {
     std::string logFile;
     LogLevel minLogLevel;
-    std::vector<Device&> devices;
+    std::vector<Device> devices;
 };
 
 

@@ -19,9 +19,9 @@ public:
 };
 
 class DeviceManager { // might not need the class, maybe pure functions are better/simpler
-    std::vector<Device&> devices;
+    std::vector<Device> devices;
 public:
-    DeviceManager(std::vector<Device&> devices) : devices(devices) {}
+    DeviceManager(std::vector<Device> devices) : devices(devices) {}
 
     void initializeDevices() {
         if (devices.empty()) {

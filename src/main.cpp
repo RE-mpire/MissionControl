@@ -38,13 +38,13 @@ int main(int argc, char **argv) {
     clients.reserve(200);
     
     bool compaction = false;
-    int rc, len, new_sd = -1;
-    int listen_sd = initIpv6();
+    char buffer[1024];
+    int rc, listen_sd = initIpv6();
     clients[0].fd = listen_sd;
     clients[0].events = POLLIN;
 
-    auto t1 = processorThread(); // list of commands to process (process command and update client when complete)
-    auto t2 = streamThread(); // stream data back, process subscribe requests (device polling loop here)
+    // auto t1 = processorThread(); // list of commands to process (process command and update client when complete)
+    // auto t2 = streamThread(); // stream data back, process subscribe requests (device polling loop here)
 
     while (running) {
         if (pollClients(clients.data(), clients.size()) < 0) { 
@@ -62,16 +62,15 @@ int main(int argc, char **argv) {
                     break;
                 }
             } else {
-                char buffer[1024];
                 rc = handleConnection(sd, buffer);
                 if (rc < 0) {
                     close(sd.fd);
                     sd.fd = -1;
                     compaction = true;
                 } else if (rc == 1) {
-                    dispatch(t1, buffer);
+                    // dispatch(t1, buffer);
                 } else if (rc == 2) {
-                    dispatch(t2, buffer);
+                    // dispatch(t2, buffer);
                 }
             }
         }
@@ -83,8 +82,8 @@ int main(int argc, char **argv) {
         }
     }
     log(INFO, "Server shutting down ...");
-    t1.shutdown(); // notify all threads to shutdown and notify clients
-    t2.shutdown();
+    // t1.shutdown(); // notify all threads to shutdown and notify clients
+    // t2.shutdown();
     // shutdownDevices(config.devices);
 
     for (auto &sd : clients) {
