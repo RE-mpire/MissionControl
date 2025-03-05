@@ -32,35 +32,63 @@ int main(int argc, char **argv) {
     setupSignalHandler();
     parseArgs(argc, argv, config);
     initLogger(config.logFile, config.minLogLevel);
-    initDevices(config.devices);
+    // initDevices(config.devices);
 
-    std::array<int, 2> sockets;
-    std::vector<int> clients;
-    clients.reserve(100);
-
-    sockets[0] = initIpv6();
-    sockets[1] = initIpv4();
+    std::vector<struct pollfd> clients;
+    clients.reserve(200);
+    
+    bool compaction = false;
+    int rc, len, new_sd = -1;
+    int listen_sd = initIpv6();
+    clients[0].fd = listen_sd;
+    clients[0].events = POLLIN;
 
     auto t1 = processorThread(); // list of commands to process (process command and update client when complete)
     auto t2 = streamThread(); // stream data back, process subscribe requests (device polling loop here)
 
     while (running) {
-        // poll for connections to accept
-        int fd = pollConnections(sockets, clients);
-        // accept connection if not at limit (close listener?)
-        if (fd < sockets.size()) { 
-            acceptConnection(fd);
-        } else {
-            handleConnection(fd); // forward data to proper thread
+        if (pollClients(clients.data(), clients.size()) < 0) { 
+            running = false;
+        }
+
+        for (auto &sd : clients) {
+            if (sd.revents == 0) continue;
+            if (sd.revents != POLLIN) {
+                log(ERROR, "Error! revents = " + std::to_string(sd.revents));
+            }
+            if (sd.fd == listen_sd) {
+                if (acceptClients(listen_sd, clients) < 0) {
+                    running = false;
+                    break;
+                }
+            } else {
+                char buffer[1024];
+                rc = handleConnection(sd, buffer);
+                if (rc < 0) {
+                    close(sd.fd);
+                    sd.fd = -1;
+                    compaction = true;
+                } else if (rc == 1) {
+                    dispatch(t1, buffer);
+                } else if (rc == 2) {
+                    dispatch(t2, buffer);
+                }
+            }
+        }
+        if (compaction) {
+            compaction = false;
+            clients.erase(std::remove_if(clients.begin(), clients.end(), [](const pollfd &pfd) {
+                return pfd.fd == -1;
+            }), clients.end());
         }
     }
     log(INFO, "Server shutting down ...");
     t1.shutdown(); // notify all threads to shutdown and notify clients
     t2.shutdown();
-    shutdownDevices(config.devices);
+    // shutdownDevices(config.devices);
 
-    for (auto &fd : sockets) {
-        close(fd);
+    for (auto &sd : clients) {
+        close(sd.fd);
     }
     log(INFO, "Server shutdown successfully");
     return 0;
